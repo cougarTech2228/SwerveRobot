@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.sensors.CANCoder;
+import com.ctre.phoenix.sensors.CANCoderStatusFrame;
 import com.ctre.phoenix.sensors.PigeonIMU;
 import com.swervedrivespecialties.swervelib.Mk3SwerveModuleHelper;
 import com.swervedrivespecialties.swervelib.Mk4iSwerveModuleHelper;
@@ -75,11 +77,21 @@ public class DrivetrainSubsystem extends SubsystemBase {
   private final SwerveModule m_frontRightModule;
   private final SwerveModule m_backLeftModule;
   private final SwerveModule m_backRightModule;
+  private final CANCoder  m_frontLeftCANCoder = new CANCoder(FRONT_LEFT_MODULE_STEER_ENCODER);
+  private final CANCoder  m_frontRightCANCoder = new CANCoder(FRONT_RIGHT_MODULE_STEER_ENCODER);
+  private final CANCoder  m_backLeftCANCoder = new CANCoder(BACK_LEFT_MODULE_STEER_ENCODER);
+  private final CANCoder  m_backRightCANCoder = new CANCoder(BACK_RIGHT_MODULE_STEER_ENCODER);
 
   private ChassisSpeeds m_chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
   public DrivetrainSubsystem() {
     ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
+
+    // Below sets the CAN coders from 100ms to 10ms
+    m_frontLeftCANCoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 10);
+    m_frontRightCANCoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 10);
+    m_backLeftCANCoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 10);
+    m_backRightCANCoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 10);
 
     // There are 4 methods you can call to create your swerve modules.
     // The method you use depends on what motors you are using.
