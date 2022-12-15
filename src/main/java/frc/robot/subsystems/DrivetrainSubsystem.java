@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.sensors.CANCoder;
+import com.ctre.phoenix.sensors.CANCoderStatusFrame;
 import com.ctre.phoenix.sensors.PigeonIMU;
 import com.swervedrivespecialties.swervelib.Mk3SwerveModuleHelper;
 import com.swervedrivespecialties.swervelib.Mk4iSwerveModuleHelper;
@@ -72,14 +74,24 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
   // These are our modules. We initialize them in the constructor.
   private final SwerveModule m_frontLeftModule;
-//   private final SwerveModule m_frontRightModule;
-//   private final SwerveModule m_backLeftModule;
-//   private final SwerveModule m_backRightModule;
+  private final SwerveModule m_frontRightModule;
+  private final SwerveModule m_backLeftModule;
+  private final SwerveModule m_backRightModule;
+  private final CANCoder  m_frontLeftCANCoder = new CANCoder(FRONT_LEFT_MODULE_STEER_ENCODER);
+  private final CANCoder  m_frontRightCANCoder = new CANCoder(FRONT_RIGHT_MODULE_STEER_ENCODER);
+  private final CANCoder  m_backLeftCANCoder = new CANCoder(BACK_LEFT_MODULE_STEER_ENCODER);
+  private final CANCoder  m_backRightCANCoder = new CANCoder(BACK_RIGHT_MODULE_STEER_ENCODER);
 
   private ChassisSpeeds m_chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
   public DrivetrainSubsystem() {
     ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
+
+    // Below sets the CAN coders from 100ms to 10ms
+    m_frontLeftCANCoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 10);
+    m_frontRightCANCoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 10);
+    m_backLeftCANCoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 10);
+    m_backRightCANCoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 10);
 
     // There are 4 methods you can call to create your swerve modules.
     // The method you use depends on what motors you are using.
@@ -119,38 +131,38 @@ public class DrivetrainSubsystem extends SubsystemBase {
     );
 
     // We will do the same for the other modules
-//     m_frontRightModule = Mk3SwerveModuleHelper.createFalcon500(
-//             tab.getLayout("Front Right Module", BuiltInLayouts.kList)
-//                     .withSize(2, 4)
-//                     .withPosition(2, 0),
-//             Mk3SwerveModuleHelper.GearRatio.FAST,
-//             FRONT_RIGHT_MODULE_DRIVE_MOTOR,
-//             FRONT_RIGHT_MODULE_STEER_MOTOR,
-//             FRONT_RIGHT_MODULE_STEER_ENCODER,
-//             FRONT_RIGHT_MODULE_STEER_OFFSET
-//     );
+    m_frontRightModule = Mk4iSwerveModuleHelper.createFalcon500(
+            tab.getLayout("Front Right Module", BuiltInLayouts.kList)
+                    .withSize(2, 4)
+                    .withPosition(2, 0),
+                    Mk4iSwerveModuleHelper.GearRatio.L2,
+            FRONT_RIGHT_MODULE_DRIVE_MOTOR,
+            FRONT_RIGHT_MODULE_STEER_MOTOR,
+            FRONT_RIGHT_MODULE_STEER_ENCODER,
+            FRONT_RIGHT_MODULE_STEER_OFFSET
+    );
 
-//     m_backLeftModule = Mk3SwerveModuleHelper.createFalcon500(
-//             tab.getLayout("Back Left Module", BuiltInLayouts.kList)
-//                     .withSize(2, 4)
-//                     .withPosition(4, 0),
-//             Mk3SwerveModuleHelper.GearRatio.FAST,
-//             BACK_LEFT_MODULE_DRIVE_MOTOR,
-//             BACK_LEFT_MODULE_STEER_MOTOR,
-//             BACK_LEFT_MODULE_STEER_ENCODER,
-//             BACK_LEFT_MODULE_STEER_OFFSET
-//     );
+    m_backLeftModule = Mk4iSwerveModuleHelper.createFalcon500(
+            tab.getLayout("Back Left Module", BuiltInLayouts.kList)
+                    .withSize(2, 4)
+                    .withPosition(4, 0),
+                    Mk4iSwerveModuleHelper.GearRatio.L2,
+            BACK_LEFT_MODULE_DRIVE_MOTOR,
+            BACK_LEFT_MODULE_STEER_MOTOR,
+            BACK_LEFT_MODULE_STEER_ENCODER,
+            BACK_LEFT_MODULE_STEER_OFFSET
+    );
 
-//     m_backRightModule = Mk3SwerveModuleHelper.createFalcon500(
-//             tab.getLayout("Back Right Module", BuiltInLayouts.kList)
-//                     .withSize(2, 4)
-//                     .withPosition(6, 0),
-//             Mk3SwerveModuleHelper.GearRatio.FAST,
-//             BACK_RIGHT_MODULE_DRIVE_MOTOR,
-//             BACK_RIGHT_MODULE_STEER_MOTOR,
-//             BACK_RIGHT_MODULE_STEER_ENCODER,
-//             BACK_RIGHT_MODULE_STEER_OFFSET
-//     );
+    m_backRightModule = Mk4iSwerveModuleHelper.createFalcon500(
+            tab.getLayout("Back Right Module", BuiltInLayouts.kList)
+                    .withSize(2, 4)
+                    .withPosition(6, 0),
+                    Mk4iSwerveModuleHelper.GearRatio.L2,
+            BACK_RIGHT_MODULE_DRIVE_MOTOR,
+            BACK_RIGHT_MODULE_STEER_MOTOR,
+            BACK_RIGHT_MODULE_STEER_ENCODER,
+            BACK_RIGHT_MODULE_STEER_OFFSET
+    );
   }
 
   /**
@@ -189,8 +201,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
     SwerveDriveKinematics.desaturateWheelSpeeds(states, MAX_VELOCITY_METERS_PER_SECOND);
 
     m_frontLeftModule.set(states[0].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE, states[0].angle.getRadians());
-//     m_frontRightModule.set(states[1].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE, states[1].angle.getRadians());
-//     m_backLeftModule.set(states[2].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE, states[2].angle.getRadians());
-//     m_backRightModule.set(states[3].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE, states[3].angle.getRadians());
+    m_frontRightModule.set(states[1].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE, states[1].angle.getRadians());
+    m_backLeftModule.set(states[2].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE, states[2].angle.getRadians());
+    m_backRightModule.set(states[3].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE, states[3].angle.getRadians());
   }
 }
