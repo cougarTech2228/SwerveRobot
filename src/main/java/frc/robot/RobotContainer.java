@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Button;
 import frc.robot.commands.DefaultDriveCommand;
 import frc.robot.commands.DockWithAprilTagCommand;
+import frc.robot.commands.DockWithAprilTagPIDCommand;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.AprilTagSubsystem;
 
@@ -67,7 +68,7 @@ public class RobotContainer {
                 .whenPressed(m_drivetrainSubsystem::zeroGyroscope);
 
         new Button(m_controller::getAButton)
-                .whenPressed(new DockWithAprilTagCommand(m_drivetrainSubsystem, m_aprilTagSubsystem, 13.0));
+                .whenPressed(new DockWithAprilTagPIDCommand(m_drivetrainSubsystem, m_aprilTagSubsystem, 13.0));
 
         new Button(m_controller::getBButton)
                 .whenPressed(m_drivetrainSubsystem::stopMotors, m_drivetrainSubsystem);
