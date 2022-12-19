@@ -3,6 +3,7 @@ package frc.robot.commands;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.AprilTagSubsystem;
 
@@ -12,7 +13,7 @@ public class DockWithAprilTagPIDCommand extends CommandBase {
     private final AprilTagSubsystem m_aprilTagSubsystem;
     private final double m_aprilTagId;
 
-    private final double LINEAR_P = 0.18;
+    private final double LINEAR_P = 0.15;
     private final double LINEAR_D = 0.0;
     private PIDController m_forwardController = new PIDController(LINEAR_P, 0, LINEAR_D);
 
@@ -21,6 +22,9 @@ public class DockWithAprilTagPIDCommand extends CommandBase {
     private PIDController m_sidewaysController = new PIDController(SIDEWAYS_P, 0, SIDEWAYS_D);
 
     private static final double DOCKING_DISTANCE_GOAL_METERS = 0.75;
+
+    private long m_lastChanged = 0;
+    private double m_start_time = 0;
 
     public DockWithAprilTagPIDCommand(DrivetrainSubsystem drivetrainSubsystem,
             AprilTagSubsystem aprilTagSubsystem,
@@ -33,8 +37,17 @@ public class DockWithAprilTagPIDCommand extends CommandBase {
     }
 
     @Override
-    public boolean isFinished() {
+    public void initialize() {
         if (m_aprilTagSubsystem.getTagID() == m_aprilTagId) {
+            m_lastChanged = m_aprilTagSubsystem.getLastChanged();
+            m_start_time = Timer.getFPGATimestamp();
+        } 
+    }
+
+    @Override
+    public boolean isFinished() {
+        if ((m_aprilTagSubsystem.getTagID() == m_aprilTagId) &&
+            (m_aprilTagSubsystem.getLastChanged() == m_lastChanged)) {
 
             double distanceToTarget = m_aprilTagSubsystem.getTZ();
             double offsetTargetDistance = m_aprilTagSubsystem.getTX();
@@ -62,12 +75,13 @@ public class DockWithAprilTagPIDCommand extends CommandBase {
             // Check to see if we're within docking distance
             if (distanceToTarget < DOCKING_DISTANCE_GOAL_METERS) {
                 System.out.println("Docked with target. Yipee!!!!!");
+                System.out.println("Command completed in " + (Timer.getFPGATimestamp() - m_start_time) + " seconds");
                 return true;
             } else {
                 return false;
             }
         } else {
-            System.out.println("Lost tag acquistion ... WTF!!!!!!!!!");
+            System.out.println("AprilTag with ID = " + m_aprilTagId + " not detected. Stopping command.");
             return true;
         }
     }

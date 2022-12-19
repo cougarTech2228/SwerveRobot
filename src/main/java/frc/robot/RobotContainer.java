@@ -68,6 +68,9 @@ public class RobotContainer {
                 .whenPressed(m_drivetrainSubsystem::zeroGyroscope);
 
         new Button(m_controller::getAButton)
+                .whenPressed(new DockWithAprilTagCommand(m_drivetrainSubsystem, m_aprilTagSubsystem, 13.0));
+
+        new Button(m_controller::getYButton)
                 .whenPressed(new DockWithAprilTagPIDCommand(m_drivetrainSubsystem, m_aprilTagSubsystem, 13.0));
 
         new Button(m_controller::getBButton)
@@ -98,7 +101,7 @@ public class RobotContainer {
 
     private static double modifyAxis(double value) {
         // Deadband
-        // value = deadband(value, 0.05);
+        value = deadband(value, 0.05);
 
         // Square the axis. (KAS) Doesn't the XboxController class already to this????
         // value = Math.copySign(value * value, value);

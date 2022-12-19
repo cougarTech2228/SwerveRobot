@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import frc.robot.subsystems.DrivetrainSubsystem;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Constants;
 import frc.robot.subsystems.AprilTagSubsystem;
@@ -12,6 +13,8 @@ public class DockWithAprilTagCommand extends CommandBase {
     private final AprilTagSubsystem m_aprilTagSubsystem;
     private final double m_aprilTagId;
 
+    private long m_lastChanged = 0;
+
     private final ChassisSpeeds m_driveForwardCoarseChassisSpeeds = new ChassisSpeeds(
             Constants.APRIL_TAG_COARSE_FORWARD_DRIVE_SPEED_IN_M_PER_S,
             0.0,
@@ -21,26 +24,6 @@ public class DockWithAprilTagCommand extends CommandBase {
             Constants.APRIL_TAG_FINE_FORWARD_DRIVE_SPEED_IN_M_PER_S,
             0.0,
             0.0);
-
-    // private final ChassisSpeeds m_driveLeftCoarseChassisSpeeds =
-    // new ChassisSpeeds(Constants.APRIL_TAG_COARSE_FORWARD_DRIVE_SPEED_IN_M_PER_S,
-    // Constants.APRIL_TAG_COARSE_SIDEWAYS_DRIVE_SPEED_IN_M_PER_S,
-    // 0.0);
-
-    // private final ChassisSpeeds m_driveLeftFineChassisSpeeds =
-    // new ChassisSpeeds(Constants.APRIL_TAG_FINE_FORWARD_DRIVE_SPEED_IN_M_PER_S,
-    // Constants.APRIL_TAG_FINE_SIDEWAYS_DRIVE_SPEED_IN_M_PER_S,
-    // 0.0);
-
-    // private final ChassisSpeeds m_driveRightCoarseChassisSpeeds =
-    // new ChassisSpeeds(Constants.APRIL_TAG_COARSE_FORWARD_DRIVE_SPEED_IN_M_PER_S,
-    // -Constants.APRIL_TAG_COARSE_SIDEWAYS_DRIVE_SPEED_IN_M_PER_S,
-    // 0.0);
-
-    // private final ChassisSpeeds m_driveRightFineChassisSpeeds =
-    // new ChassisSpeeds(Constants.APRIL_TAG_FINE_FORWARD_DRIVE_SPEED_IN_M_PER_S,
-    // -Constants.APRIL_TAG_FINE_SIDEWAYS_DRIVE_SPEED_IN_M_PER_S,
-    // 0.0);
 
     private final ChassisSpeeds m_driveLeftCoarseChassisSpeeds = new ChassisSpeeds(
             Constants.APRIL_TAG_SIMULTANEOUS_FORWARD_DRIVE_SPEED_IN_M_PER_S,
@@ -62,23 +45,23 @@ public class DockWithAprilTagCommand extends CommandBase {
             -Constants.APRIL_TAG_FINE_SIDEWAYS_DRIVE_SPEED_IN_M_PER_S,
             0.0);
 
-    private final ChassisSpeeds m_turnRightCoarseChassisSpeeds = new ChassisSpeeds(
-            0.0,
-            Constants.APRIL_TAG_FINE_SIDEWAYS_DRIVE_SPEED_IN_M_PER_S,
-            -Constants.APRIL_TAG_COARSE_TURN_SPEED_IN_M_PER_S);
+    // private final ChassisSpeeds m_turnRightCoarseChassisSpeeds = new ChassisSpeeds(
+    //         0.0,
+    //         Constants.APRIL_TAG_FINE_SIDEWAYS_DRIVE_SPEED_IN_M_PER_S,
+    //         -Constants.APRIL_TAG_COARSE_TURN_SPEED_IN_M_PER_S);
 
-    private final ChassisSpeeds m_turnRightFineChassisSpeeds = new ChassisSpeeds(0.0,
-            Constants.APRIL_TAG_FINE_SIDEWAYS_DRIVE_SPEED_IN_M_PER_S,
-            -Constants.APRIL_TAG_FINE_TURN_SPEED_IN_M_PER_S);
+    // private final ChassisSpeeds m_turnRightFineChassisSpeeds = new ChassisSpeeds(0.0,
+    //         Constants.APRIL_TAG_FINE_SIDEWAYS_DRIVE_SPEED_IN_M_PER_S,
+    //         -Constants.APRIL_TAG_FINE_TURN_SPEED_IN_M_PER_S);
 
-    private final ChassisSpeeds m_turnLeftCoarseChassisSpeeds = new ChassisSpeeds(
-            0.0,
-            -Constants.APRIL_TAG_FINE_SIDEWAYS_DRIVE_SPEED_IN_M_PER_S,
-            Constants.APRIL_TAG_COARSE_TURN_SPEED_IN_M_PER_S);
+    // private final ChassisSpeeds m_turnLeftCoarseChassisSpeeds = new ChassisSpeeds(
+    //         0.0,
+    //         -Constants.APRIL_TAG_FINE_SIDEWAYS_DRIVE_SPEED_IN_M_PER_S,
+    //         Constants.APRIL_TAG_COARSE_TURN_SPEED_IN_M_PER_S);
 
-    private final ChassisSpeeds m_turnLeftFineChassisSpeeds = new ChassisSpeeds(0.0,
-            -Constants.APRIL_TAG_FINE_SIDEWAYS_DRIVE_SPEED_IN_M_PER_S,
-            Constants.APRIL_TAG_FINE_TURN_SPEED_IN_M_PER_S);
+    // private final ChassisSpeeds m_turnLeftFineChassisSpeeds = new ChassisSpeeds(0.0,
+    //         -Constants.APRIL_TAG_FINE_SIDEWAYS_DRIVE_SPEED_IN_M_PER_S,
+    //         Constants.APRIL_TAG_FINE_TURN_SPEED_IN_M_PER_S);
 
     private static final double COARSE_LEFT_TO_RIGHT_OFFSET_CORRECTION_METERS = 0.15;
     private static final double FINE_LEFT_TO_RIGHT_OFFSET_CORRECTION_METERS = 0.08;
@@ -87,8 +70,10 @@ public class DockWithAprilTagCommand extends CommandBase {
 
     private static final double FINE_COARSE_ADJUSTMENT_DISTANCE_METERS = 1.25;
 
-    private static final double COARSE_OFF_ANGLE_PITCH_CORRECTION = 10.0;
-    private static final double FINE_OFF_ANGLE_PITCH_CORRECTION = 6.0;
+    // private static final double COARSE_OFF_ANGLE_PITCH_CORRECTION = 10.0;
+    // private static final double FINE_OFF_ANGLE_PITCH_CORRECTION = 6.0;
+
+    private double m_start_time = 0;
 
     public DockWithAprilTagCommand(DrivetrainSubsystem drivetrainSubsystem,
             AprilTagSubsystem aprilTagSubsystem,
@@ -101,12 +86,21 @@ public class DockWithAprilTagCommand extends CommandBase {
     }
 
     @Override
-    public boolean isFinished() {
+    public void initialize() {
         if (m_aprilTagSubsystem.getTagID() == m_aprilTagId) {
+            m_lastChanged = m_aprilTagSubsystem.getLastChanged();
+            m_start_time = Timer.getFPGATimestamp();
+        } 
+    }
+
+    @Override
+    public boolean isFinished() {
+        if ((m_aprilTagSubsystem.getTagID() == m_aprilTagId) &&
+            (m_aprilTagSubsystem.getLastChanged() == m_lastChanged)) {
 
             double distanceToTarget = m_aprilTagSubsystem.getTZ();
             double offsetTargetDistance = m_aprilTagSubsystem.getTX();
-            double pitchToTarget = m_aprilTagSubsystem.getPitch();
+            // double pitchToTarget = m_aprilTagSubsystem.getPitch();
 
             // Fine Adjustments
             if (distanceToTarget < FINE_COARSE_ADJUSTMENT_DISTANCE_METERS) {
@@ -148,17 +142,15 @@ public class DockWithAprilTagCommand extends CommandBase {
             }
 
             // Check to see if we're within docking distance
-            if ((distanceToTarget < DOCKING_DISTANCE_METERS) &&
-                (Math.abs(offsetTargetDistance) < FINE_LEFT_TO_RIGHT_OFFSET_CORRECTION_METERS)/* &&
-                (Math.abs(pitchToTarget) < FINE_OFF_ANGLE_PITCH_CORRECTION)*/)
-                {
+            if (distanceToTarget < DOCKING_DISTANCE_METERS) {
                 System.out.println("Docked with target. Yipee!!!!!");
+                System.out.println("Command completed in " + (Timer.getFPGATimestamp() - m_start_time) + " seconds");
                 return true;
             } else {
                 return false;
             }
         } else {
-            System.out.println("Lost tag acquistion ... WTF!!!!!!!!!");
+            System.out.println("AprilTag with ID = " + m_aprilTagId + " not detected. Stopping command.");
             return true;
         }
     }
