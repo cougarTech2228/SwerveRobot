@@ -8,7 +8,9 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.PigeonIMU;
+import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.swervedrivespecialties.swervelib.Mk4iSwerveModuleHelper;
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 import com.swervedrivespecialties.swervelib.SwerveModule;
@@ -98,6 +100,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
     private final TalonFX m_backLeftSteerMotor = new TalonFX(Constants.BACK_LEFT_MODULE_STEER_MOTOR_ID);
     private final TalonFX m_backRightSteerMotor = new TalonFX(Constants.BACK_RIGHT_MODULE_STEER_MOTOR_ID);
 
+    private final CANCoder m_frontLeftCANCoder = new CANCoder(Constants.FRONT_LEFT_MODULE_STEER_MOTOR_ID);
+    private final CANCoder m_frontRightCANCoder = new CANCoder(Constants.FRONT_RIGHT_MODULE_STEER_MOTOR_ID);
+    private final CANCoder m_backLeftCANCoder = new CANCoder(Constants.BACK_LEFT_MODULE_STEER_MOTOR_ID);
+    private final CANCoder m_backRightCANCoder = new CANCoder(Constants.BACK_RIGHT_MODULE_STEER_MOTOR_ID);
+
     private ChassisSpeeds m_chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
     private static final double CLOSED_LOOP_RAMP = 0.5; // seconds
@@ -159,7 +166,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
         configureDriveMotor(m_frontRightDriveMotor);
         configureDriveMotor(m_backLeftDriveMotor);
         configureDriveMotor(m_backRightDriveMotor);
-                        
+
+        m_frontLeftCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
+        m_frontRightCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
+        m_backLeftCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
+        m_backRightCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
+                       
         zeroGyroscope();
     }
 
@@ -204,6 +216,19 @@ public class DrivetrainSubsystem extends SubsystemBase {
         m_frontRightSteerMotor.setNeutralMode(NeutralMode.Coast);
         m_backLeftSteerMotor.setNeutralMode(NeutralMode.Coast);
         m_backRightSteerMotor.setNeutralMode(NeutralMode.Coast);
+    }
+
+    public void setMotorsToBrake() {
+        System.out.println("setMotorsToBrake");
+        m_frontLeftDriveMotor.setNeutralMode(NeutralMode.Brake);
+        m_frontRightDriveMotor.setNeutralMode(NeutralMode.Brake);
+        m_backLeftDriveMotor.setNeutralMode(NeutralMode.Brake);
+        m_backRightDriveMotor.setNeutralMode(NeutralMode.Brake);
+
+        m_frontLeftSteerMotor.setNeutralMode(NeutralMode.Brake);
+        m_frontRightSteerMotor.setNeutralMode(NeutralMode.Brake);
+        m_backLeftSteerMotor.setNeutralMode(NeutralMode.Brake);
+        m_backRightSteerMotor.setNeutralMode(NeutralMode.Brake);
     }
 
     @Override

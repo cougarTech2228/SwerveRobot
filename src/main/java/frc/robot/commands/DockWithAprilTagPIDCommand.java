@@ -16,8 +16,9 @@ public class DockWithAprilTagPIDCommand extends CommandBase {
     private final AprilTagSubsystem m_aprilTagSubsystem;
     private final double m_aprilTagId;
 
-    private static final double MAX_FORWARD_DOCKING_VELOCITY = .75; // meters/second
-    private static final double MAX_FORWARD_DOCKING_ACCELERATION = 0.25; // meters/second**2
+    // Distance to Target Correction
+    private static final double MAX_FORWARD_DOCKING_VELOCITY = 1.2;
+    private static final double MAX_FORWARD_DOCKING_ACCELERATION = 0.3; 
 
     private final TrapezoidProfile.Constraints m_forwardConstraints = 
         new TrapezoidProfile.Constraints(MAX_FORWARD_DOCKING_VELOCITY, MAX_FORWARD_DOCKING_ACCELERATION);
@@ -27,8 +28,9 @@ public class DockWithAprilTagPIDCommand extends CommandBase {
     private final ProfiledPIDController m_forwardController =
         new ProfiledPIDController(FORWARD_P, 0.0, FORWARD_D, m_forwardConstraints, kDt);
 
-    private static final double MAX_SIDEWAYS_DOCKING_VELOCITY = .75; // meters/second
-    private static final double MAX_SIDEWAYS_DOCKING_ACCELERATION = 0.25; // meters/second**2
+    // Sideways Correction
+    private static final double MAX_SIDEWAYS_DOCKING_VELOCITY = 1.0;
+    private static final double MAX_SIDEWAYS_DOCKING_ACCELERATION = 0.3;
 
     private final TrapezoidProfile.Constraints m_sidewaysConstraints = 
         new TrapezoidProfile.Constraints(MAX_SIDEWAYS_DOCKING_VELOCITY, MAX_SIDEWAYS_DOCKING_ACCELERATION);
@@ -62,7 +64,7 @@ public class DockWithAprilTagPIDCommand extends CommandBase {
             m_lastChanged = m_aprilTagSubsystem.getLastChanged();
             m_start_time = Timer.getFPGATimestamp();
 
-            m_forwardController.setGoal(DOCKING_DISTANCE_GOAL_METERS);
+            m_forwardController.setGoal(0.0);
             m_sidewaysController.setGoal(0.0);
         } 
     }

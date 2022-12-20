@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Button;
 import frc.robot.commands.DefaultDriveCommand;
-import frc.robot.commands.DockWithAprilTagCommand;
 import frc.robot.commands.DockWithAprilTagPIDCommand;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.AprilTagSubsystem;
@@ -67,9 +66,6 @@ public class RobotContainer {
                 // No requirements because we don't need to interrupt anything
                 .whenPressed(m_drivetrainSubsystem::zeroGyroscope);
 
-        new Button(m_controller::getAButton)
-                .whenPressed(new DockWithAprilTagCommand(m_drivetrainSubsystem, m_aprilTagSubsystem, 13.0));
-
         new Button(m_controller::getYButton)
                 .whenPressed(new DockWithAprilTagPIDCommand(m_drivetrainSubsystem, m_aprilTagSubsystem, 13.0));
 
@@ -103,8 +99,8 @@ public class RobotContainer {
         // Deadband
         value = deadband(value, 0.05);
 
-        // Square the axis. (KAS) Doesn't the XboxController class already to this????
-        // value = Math.copySign(value * value, value);
+        // Square the axis. Decreases sensitivity at lower speeds
+        value = Math.copySign(value * value, value);
 
         // Temporarily slowing things down so I don't break anything.
         value = value * 0.25;
