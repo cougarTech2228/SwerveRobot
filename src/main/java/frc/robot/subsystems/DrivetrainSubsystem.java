@@ -8,8 +8,6 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
-import com.ctre.phoenix.sensors.CANCoder;
-import com.ctre.phoenix.sensors.CANCoderStatusFrame;
 import com.ctre.phoenix.sensors.PigeonIMU;
 import com.swervedrivespecialties.swervelib.Mk4iSwerveModuleHelper;
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
@@ -89,11 +87,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
     private final SwerveModule m_frontRightModule;
     private final SwerveModule m_backLeftModule;
     private final SwerveModule m_backRightModule;
-
-    private final CANCoder m_frontLeftCANCoder = new CANCoder(Constants.FRONT_LEFT_MODULE_STEER_ENCODER_ID);
-    private final CANCoder m_frontRightCANCoder = new CANCoder(Constants.FRONT_RIGHT_MODULE_STEER_ENCODER_ID);
-    private final CANCoder m_backLeftCANCoder = new CANCoder(Constants.BACK_LEFT_MODULE_STEER_ENCODER_ID);
-    private final CANCoder m_backRightCANCoder = new CANCoder(Constants.BACK_RIGHT_MODULE_STEER_ENCODER_ID);
 
     private final TalonFX m_frontLeftDriveMotor = new TalonFX(Constants.FRONT_LEFT_MODULE_DRIVE_MOTOR_ID);
     private final TalonFX m_frontRightDriveMotor = new TalonFX(Constants.FRONT_RIGHT_MODULE_DRIVE_MOTOR_ID);
