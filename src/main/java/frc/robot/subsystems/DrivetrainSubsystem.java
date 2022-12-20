@@ -5,6 +5,8 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
+import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.CANCoderStatusFrame;
@@ -105,21 +107,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
     private ChassisSpeeds m_chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
+    private static final double CLOSED_LOOP_RAMP = 0.5; // seconds
+    private static final double VOLTAGE_COMPENSATION_SATURATION = 11.0; // volts
+
     public DrivetrainSubsystem() {
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
-
-        // Below sets the CAN coders from 100ms to 250ms which is what SDS sets the
-        // Falcons to
-        m_frontLeftCANCoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 250);
-        m_frontRightCANCoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 250);
-        m_backLeftCANCoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 250);
-        m_backRightCANCoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 250);
-
-        double closedRamp = 0.5;
-        m_frontLeftDriveMotor.configClosedloopRamp(closedRamp);
-        m_frontRightDriveMotor.configClosedloopRamp(closedRamp);
-        m_backLeftDriveMotor.configClosedloopRamp(closedRamp);
-        m_backRightDriveMotor.configClosedloopRamp(closedRamp);
 
         m_frontLeftModule = Mk4iSwerveModuleHelper.createFalcon500(
                 // This parameter is optional, but will allow you to see the current state of
@@ -169,6 +161,21 @@ public class DrivetrainSubsystem extends SubsystemBase {
                 Constants.BACK_RIGHT_MODULE_STEER_MOTOR_ID,
                 Constants.BACK_RIGHT_MODULE_STEER_ENCODER_ID,
                 Constants.BACK_RIGHT_MODULE_STEER_OFFSET);
+
+        configureDriveMotor(m_frontLeftDriveMotor);
+        configureDriveMotor(m_frontRightDriveMotor);
+        configureDriveMotor(m_backLeftDriveMotor);
+        configureDriveMotor(m_backRightDriveMotor);
+                        
+        zeroGyroscope();
+    }
+
+    private void configureDriveMotor(TalonFX motor) {
+        motor.configClosedloopRamp(CLOSED_LOOP_RAMP);
+        motor.configVoltageCompSaturation(VOLTAGE_COMPENSATION_SATURATION);
+        motor.enableVoltageCompensation(true);
+        motor.configStatorCurrentLimit(new StatorCurrentLimitConfiguration(true, 20, 25, 1.0));
+        motor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 10, 15, 0.5));
     }
 
     /**
