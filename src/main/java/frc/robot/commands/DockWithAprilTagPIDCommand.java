@@ -60,7 +60,10 @@ public class DockWithAprilTagPIDCommand extends CommandBase {
 
     @Override
     public void initialize() {
+        m_drivetrainSubsystem.zeroGyroscope();
+
         if (m_aprilTagSubsystem.getTagID() == m_aprilTagId) {
+    
             m_lastChanged = m_aprilTagSubsystem.getLastChanged();
             m_start_time = Timer.getFPGATimestamp();
 
@@ -96,10 +99,10 @@ public class DockWithAprilTagPIDCommand extends CommandBase {
                 sidewaysVelocity = -MIN_SIDEWAYS_VELOCITY;
             }
 
-            ChassisSpeeds chassisSpeeds = new ChassisSpeeds(
-                forwardVelocity,
-                sidewaysVelocity,
-                0.0);
+            ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(forwardVelocity,
+                    sidewaysVelocity,
+                    0.0,
+                    m_drivetrainSubsystem.getGyroscopeRotation());
 
             //System.out.println("F: " + forwardVelocity + " S: " + sidewaysVelocity);
 

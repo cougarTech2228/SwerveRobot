@@ -35,7 +35,7 @@ public final class Constants {
     public static final int FRONT_LEFT_MODULE_DRIVE_MOTOR_ID = 47; // Set front left module drive motor ID
     public static final int FRONT_LEFT_MODULE_STEER_MOTOR_ID = 48; // Set front left module steer motor ID
     public static final int FRONT_LEFT_MODULE_STEER_ENCODER_ID = 49; // Set front left steer encoder ID
-    public static final double FRONT_LEFT_MODULE_STEER_OFFSET = -Math.toRadians(307.88); // FIXME Measure and set front
+    public static final double FRONT_LEFT_MODULE_STEER_OFFSET = -Math.toRadians(305); // FIXME Measure and set front
                                                                                         // left steer offset
 
     public static final int FRONT_RIGHT_MODULE_DRIVE_MOTOR_ID = 56; // Set front right drive motor ID
@@ -47,13 +47,13 @@ public final class Constants {
     public static final int BACK_LEFT_MODULE_DRIVE_MOTOR_ID = 50; // Set back left drive motor ID
     public static final int BACK_LEFT_MODULE_STEER_MOTOR_ID = 51; // Set back left steer motor ID
     public static final int BACK_LEFT_MODULE_STEER_ENCODER_ID = 52; // Set back left steer encoder ID
-    public static final double BACK_LEFT_MODULE_STEER_OFFSET = -Math.toRadians(123.22); // FIXME Measure and set back
+    public static final double BACK_LEFT_MODULE_STEER_OFFSET = -Math.toRadians(124.22); // FIXME Measure and set back
                                                                                        // left steer offset
 
     public static final int BACK_RIGHT_MODULE_DRIVE_MOTOR_ID = 53; // Set back right drive motor ID
     public static final int BACK_RIGHT_MODULE_STEER_MOTOR_ID = 54; // Set back right steer motor ID
     public static final int BACK_RIGHT_MODULE_STEER_ENCODER_ID = 55; // Set back right steer encoder ID
-    public static final double BACK_RIGHT_MODULE_STEER_OFFSET = -Math.toRadians(65.04); // FIXME Measure and set back
+    public static final double BACK_RIGHT_MODULE_STEER_OFFSET = -Math.toRadians(66.04); // FIXME Measure and set back
                                                                                        // right steer offset
 
     public static final double APRIL_TAG_COARSE_FORWARD_DRIVE_SPEED_IN_M_PER_S = 0.8;

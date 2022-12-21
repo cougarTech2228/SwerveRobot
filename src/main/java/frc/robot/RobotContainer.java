@@ -35,6 +35,7 @@ public class RobotContainer {
      * The container for the robot. Contains subsystems, OI devices, and commands.
      */
     public RobotContainer() {
+
         // Set up the default command for the drivetrain.
         // Left stick Y axis -> forward and backwards movement
         // Left stick X axis -> left and right movement
@@ -42,9 +43,9 @@ public class RobotContainer {
         // isFieldOriented (true or false)
         m_drivetrainSubsystem.setDefaultCommand(new DefaultDriveCommand(
                 m_drivetrainSubsystem,
-                () -> -modifyAxis(m_controller.getLeftY()) * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND,
-                () -> -modifyAxis(m_controller.getLeftX()) * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND,
-                () -> -modifyAxis(m_controller.getRightX())
+                () -> -modifyAxis(m_controller.getLeftY()) * m_drivetrainSubsystem.getForwardAdjustment() * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND,
+                () -> -modifyAxis(m_controller.getLeftX()) * m_drivetrainSubsystem.getSidewaysAdjustment() * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND,
+                () -> -modifyAxis(m_controller.getRightX()) * m_drivetrainSubsystem.getRotationalAdjustmennt()
                         * DrivetrainSubsystem.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND,
                 false));
 
@@ -101,14 +102,6 @@ public class RobotContainer {
 
         // Square the axis. Decreases sensitivity at lower speeds
         value = Math.copySign(value * value, value);
-
-        // Temporarily slowing things down so I don't break anything.
-        value = value * 0.25;
-
-        // An attempt to further provide more fine tuning at lower speeds
-        // if (Math.abs(value) < 0.8) {
-        // value = 1.555 * Math.pow(value, 3);
-        // }
 
         return value;
     }

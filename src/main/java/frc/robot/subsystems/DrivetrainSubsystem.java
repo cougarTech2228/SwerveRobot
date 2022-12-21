@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import java.util.Map;
+
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
@@ -19,7 +21,11 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -110,6 +116,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
     private static final double CLOSED_LOOP_RAMP = 0.5; // seconds
     private static final double VOLTAGE_COMPENSATION_SATURATION = 11.0; // volts
 
+    private static final double INITIAL_INPUT_ADJUSTMENT = 0.25;
+
+    private NetworkTable m_shuffleboardTable = NetworkTableInstance.getDefault().getTable("Shuffleboard");
+    private NetworkTableEntry m_forwardAdjustmentTableEntry;
+    private NetworkTableEntry m_sidewaysAdjustmentTableEntry;
+    private NetworkTableEntry m_rotationalAdjustmentTableEntry;
+
     public DrivetrainSubsystem() {
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
 
@@ -117,7 +130,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
                 // This parameter is optional, but will allow you to see the current state of
                 // the module on the dashboard.
                 tab.getLayout("Front Left Module", BuiltInLayouts.kList)
-                        .withSize(2, 4)
+                        .withSize(2, 3)
                         .withPosition(0, 0),
                 // This can either be STANDARD or FAST depending on your gear configuration
                 Mk4iSwerveModuleHelper.GearRatio.L2,
@@ -134,7 +147,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
         // We will do the same for the other modules
         m_frontRightModule = Mk4iSwerveModuleHelper.createFalcon500(
                 tab.getLayout("Front Right Module", BuiltInLayouts.kList)
-                        .withSize(2, 4)
+                        .withSize(2, 3)
                         .withPosition(2, 0),
                 Mk4iSwerveModuleHelper.GearRatio.L2,
                 Constants.FRONT_RIGHT_MODULE_DRIVE_MOTOR_ID,
@@ -144,7 +157,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
         m_backLeftModule = Mk4iSwerveModuleHelper.createFalcon500(
                 tab.getLayout("Back Left Module", BuiltInLayouts.kList)
-                        .withSize(2, 4)
+                        .withSize(2, 3)
                         .withPosition(4, 0),
                 Mk4iSwerveModuleHelper.GearRatio.L2,
                 Constants.BACK_LEFT_MODULE_DRIVE_MOTOR_ID,
@@ -154,7 +167,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
         m_backRightModule = Mk4iSwerveModuleHelper.createFalcon500(
                 tab.getLayout("Back Right Module", BuiltInLayouts.kList)
-                        .withSize(2, 4)
+                        .withSize(2, 3)
                         .withPosition(6, 0),
                 Mk4iSwerveModuleHelper.GearRatio.L2,
                 Constants.BACK_RIGHT_MODULE_DRIVE_MOTOR_ID,
@@ -173,6 +186,20 @@ public class DrivetrainSubsystem extends SubsystemBase {
         m_backRightCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
                        
         zeroGyroscope();
+
+        // Add widgets to adjust controller input values
+        m_forwardAdjustmentTableEntry = tab.add("Forward Adj", INITIAL_INPUT_ADJUSTMENT)
+                .withWidget(BuiltInWidgets.kNumberSlider)
+                .withProperties(Map.of("min", INITIAL_INPUT_ADJUSTMENT, "max", 1)).withSize(2, 1).withPosition(0, 3)
+                .getEntry();
+        m_sidewaysAdjustmentTableEntry = tab.add("Sideways Adj", INITIAL_INPUT_ADJUSTMENT)
+                .withWidget(BuiltInWidgets.kNumberSlider)
+                .withProperties(Map.of("min", INITIAL_INPUT_ADJUSTMENT, "max", 1)).withSize(2, 1).withPosition(2, 3)
+                .getEntry();
+        m_rotationalAdjustmentTableEntry = tab.add("Rotational Adj", INITIAL_INPUT_ADJUSTMENT)
+                .withWidget(BuiltInWidgets.kNumberSlider)
+                .withProperties(Map.of("min", INITIAL_INPUT_ADJUSTMENT, "max", 1)).withSize(2, 1).withPosition(4, 3)
+                .getEntry();
     }
 
     private void configureDriveMotor(TalonFX motor) {
@@ -229,6 +256,18 @@ public class DrivetrainSubsystem extends SubsystemBase {
         m_frontRightSteerMotor.setNeutralMode(NeutralMode.Brake);
         m_backLeftSteerMotor.setNeutralMode(NeutralMode.Brake);
         m_backRightSteerMotor.setNeutralMode(NeutralMode.Brake);
+    }
+
+    public double getForwardAdjustment() {
+        return m_forwardAdjustmentTableEntry.getDouble(INITIAL_INPUT_ADJUSTMENT);
+    }
+
+    public double getSidewaysAdjustment() {
+        return m_sidewaysAdjustmentTableEntry.getDouble(INITIAL_INPUT_ADJUSTMENT);
+    }
+
+    public double getRotationalAdjustmennt() {
+        return m_rotationalAdjustmentTableEntry.getDouble(INITIAL_INPUT_ADJUSTMENT);
     }
 
     @Override
