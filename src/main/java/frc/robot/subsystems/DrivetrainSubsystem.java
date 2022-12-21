@@ -10,9 +10,7 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
-import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.PigeonIMU;
-import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.swervedrivespecialties.swervelib.Mk4iSwerveModuleHelper;
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 import com.swervedrivespecialties.swervelib.SwerveModule;
@@ -21,9 +19,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -106,10 +102,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
     private final TalonFX m_backLeftSteerMotor = new TalonFX(Constants.BACK_LEFT_MODULE_STEER_MOTOR_ID);
     private final TalonFX m_backRightSteerMotor = new TalonFX(Constants.BACK_RIGHT_MODULE_STEER_MOTOR_ID);
 
-    private final CANCoder m_frontLeftCANCoder = new CANCoder(Constants.FRONT_LEFT_MODULE_STEER_MOTOR_ID);
-    private final CANCoder m_frontRightCANCoder = new CANCoder(Constants.FRONT_RIGHT_MODULE_STEER_MOTOR_ID);
-    private final CANCoder m_backLeftCANCoder = new CANCoder(Constants.BACK_LEFT_MODULE_STEER_MOTOR_ID);
-    private final CANCoder m_backRightCANCoder = new CANCoder(Constants.BACK_RIGHT_MODULE_STEER_MOTOR_ID);
+    // private final CANCoder m_frontLeftCANCoder = new CANCoder(Constants.FRONT_LEFT_MODULE_STEER_MOTOR_ID);
+    // private final CANCoder m_frontRightCANCoder = new CANCoder(Constants.FRONT_RIGHT_MODULE_STEER_MOTOR_ID);
+    // private final CANCoder m_backLeftCANCoder = new CANCoder(Constants.BACK_LEFT_MODULE_STEER_MOTOR_ID);
+    // private final CANCoder m_backRightCANCoder = new CANCoder(Constants.BACK_RIGHT_MODULE_STEER_MOTOR_ID);
 
     private ChassisSpeeds m_chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
@@ -118,10 +114,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
     private static final double INITIAL_INPUT_ADJUSTMENT = 0.25;
 
-    private NetworkTable m_shuffleboardTable = NetworkTableInstance.getDefault().getTable("Shuffleboard");
     private NetworkTableEntry m_forwardAdjustmentTableEntry;
     private NetworkTableEntry m_sidewaysAdjustmentTableEntry;
     private NetworkTableEntry m_rotationalAdjustmentTableEntry;
+
+    private static final boolean INITIAL_FIELD_ORIENTED_SETTING = true;
+
+    private NetworkTableEntry m_isFieldOrientedTableEntry;
 
     public DrivetrainSubsystem() {
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
@@ -179,26 +178,35 @@ public class DrivetrainSubsystem extends SubsystemBase {
         configureDriveMotor(m_frontRightDriveMotor);
         configureDriveMotor(m_backLeftDriveMotor);
         configureDriveMotor(m_backRightDriveMotor);
-
-        m_frontLeftCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
-        m_frontRightCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
-        m_backLeftCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
-        m_backRightCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
                        
         zeroGyroscope();
 
-        // Add widgets to adjust controller input values
+        // Add widgets to adjust controller input values and robot-v-field orientation
         m_forwardAdjustmentTableEntry = tab.add("Forward Adj", INITIAL_INPUT_ADJUSTMENT)
                 .withWidget(BuiltInWidgets.kNumberSlider)
-                .withProperties(Map.of("min", INITIAL_INPUT_ADJUSTMENT, "max", 1)).withSize(2, 1).withPosition(0, 3)
+                .withProperties(Map.of("min", INITIAL_INPUT_ADJUSTMENT, "max", 1))
+                .withSize(2, 1)
+                .withPosition(0, 3)
                 .getEntry();
+
         m_sidewaysAdjustmentTableEntry = tab.add("Sideways Adj", INITIAL_INPUT_ADJUSTMENT)
                 .withWidget(BuiltInWidgets.kNumberSlider)
-                .withProperties(Map.of("min", INITIAL_INPUT_ADJUSTMENT, "max", 1)).withSize(2, 1).withPosition(2, 3)
+                .withProperties(Map.of("min", INITIAL_INPUT_ADJUSTMENT, "max", 1))
+                .withSize(2, 1)
+                .withPosition(2, 3)
                 .getEntry();
+
         m_rotationalAdjustmentTableEntry = tab.add("Rotational Adj", INITIAL_INPUT_ADJUSTMENT)
                 .withWidget(BuiltInWidgets.kNumberSlider)
-                .withProperties(Map.of("min", INITIAL_INPUT_ADJUSTMENT, "max", 1)).withSize(2, 1).withPosition(4, 3)
+                .withProperties(Map.of("min", INITIAL_INPUT_ADJUSTMENT, "max", 1))
+                .withSize(2, 1)
+                .withPosition(4, 3)
+                .getEntry();
+
+        m_isFieldOrientedTableEntry = tab.add("Field Oriented?", INITIAL_FIELD_ORIENTED_SETTING)
+                .withWidget(BuiltInWidgets.kToggleButton)
+                .withSize(2, 1)
+                .withPosition(6, 3)
                 .getEntry();
     }
 
@@ -209,6 +217,15 @@ public class DrivetrainSubsystem extends SubsystemBase {
         motor.configStatorCurrentLimit(new StatorCurrentLimitConfiguration(true, 20, 25, 1.0));
         motor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 10, 15, 0.5));
     }
+
+    // KAS - this fails every time and you can't configure the CANCoders via Pheonix Tuner, WTF?
+    // private void configureSteerSensor(CANCoder sensor) {
+    //     if (sensor.configGetSensorInitializationStrategy(1000).value == SensorInitializationStrategy.BootToZero.value) {
+    //         if (sensor.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition, 1000).value != ErrorCode.OK.value) {
+    //             System.out.println("ERROR: Couldn't set the initialization strategy");
+    //         }
+    //     }
+    // }
 
     /**
      * Sets the gyroscope angle to zero. This can be used to set the direction the
@@ -266,8 +283,20 @@ public class DrivetrainSubsystem extends SubsystemBase {
         return m_sidewaysAdjustmentTableEntry.getDouble(INITIAL_INPUT_ADJUSTMENT);
     }
 
+    public boolean getIsFieldOrientedSetting() {
+        return m_isFieldOrientedTableEntry.getBoolean(INITIAL_FIELD_ORIENTED_SETTING);
+    }
+
     public double getRotationalAdjustmennt() {
         return m_rotationalAdjustmentTableEntry.getDouble(INITIAL_INPUT_ADJUSTMENT);
+    }
+
+    // This is an attempt to get rid of the "dead wheel" issue when the CANCoder
+    // isn't initialized properly. 
+    public void primeDrivetrain() {
+        System.out.println("primeDrivetrain");
+        ChassisSpeeds chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
+        drive(chassisSpeeds);
     }
 
     @Override

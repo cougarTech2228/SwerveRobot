@@ -12,25 +12,22 @@ public class DefaultDriveCommand extends CommandBase {
     private final DoubleSupplier m_translationXSupplier;
     private final DoubleSupplier m_translationYSupplier;
     private final DoubleSupplier m_rotationSupplier;
-    private final Boolean m_isFieldOriented;
 
     public DefaultDriveCommand(DrivetrainSubsystem drivetrainSubsystem,
             DoubleSupplier translationXSupplier,
             DoubleSupplier translationYSupplier,
-            DoubleSupplier rotationSupplier,
-            Boolean isFieldOriented) {
+            DoubleSupplier rotationSupplier) {
         this.m_drivetrainSubsystem = drivetrainSubsystem;
         this.m_translationXSupplier = translationXSupplier;
         this.m_translationYSupplier = translationYSupplier;
         this.m_rotationSupplier = rotationSupplier;
-        this.m_isFieldOriented = isFieldOriented;
 
         addRequirements(drivetrainSubsystem);
     }
 
     @Override
     public void execute() {
-        if (m_isFieldOriented) {
+        if (m_drivetrainSubsystem.getIsFieldOrientedSetting()) {
             m_drivetrainSubsystem.drive(
                     ChassisSpeeds.fromFieldRelativeSpeeds(m_translationXSupplier.getAsDouble(),
                             m_translationYSupplier.getAsDouble(),

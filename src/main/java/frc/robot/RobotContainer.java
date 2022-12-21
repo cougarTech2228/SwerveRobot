@@ -46,8 +46,7 @@ public class RobotContainer {
                 () -> -modifyAxis(m_controller.getLeftY()) * m_drivetrainSubsystem.getForwardAdjustment() * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND,
                 () -> -modifyAxis(m_controller.getLeftX()) * m_drivetrainSubsystem.getSidewaysAdjustment() * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND,
                 () -> -modifyAxis(m_controller.getRightX()) * m_drivetrainSubsystem.getRotationalAdjustmennt()
-                        * DrivetrainSubsystem.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND,
-                false));
+                        * DrivetrainSubsystem.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND));
 
         // Configure the button bindings
         configureButtonBindings();
@@ -66,7 +65,7 @@ public class RobotContainer {
         new Button(m_controller::getBackButton)
                 // No requirements because we don't need to interrupt anything
                 .whenPressed(m_drivetrainSubsystem::zeroGyroscope);
-
+               
         new Button(m_controller::getYButton)
                 .whenPressed(new DockWithAprilTagPIDCommand(m_drivetrainSubsystem, m_aprilTagSubsystem, 13.0));
 
