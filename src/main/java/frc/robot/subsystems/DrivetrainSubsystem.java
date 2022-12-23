@@ -6,24 +6,40 @@ package frc.robot.subsystems;
 
 import java.util.Map;
 
+import javax.sound.sampled.SourceDataLine;
+
+import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.PigeonIMU;
+import com.ctre.phoenix.sensors.SensorInitializationStrategy;
+import com.pathplanner.lib.PathConstraints;
+import com.pathplanner.lib.PathPlanner;
+import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 import com.swervedrivespecialties.swervelib.Mk4iSwerveModuleHelper;
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 import com.swervedrivespecialties.swervelib.SwerveModule;
+
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -102,10 +118,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
     private final TalonFX m_backLeftSteerMotor = new TalonFX(Constants.BACK_LEFT_MODULE_STEER_MOTOR_ID);
     private final TalonFX m_backRightSteerMotor = new TalonFX(Constants.BACK_RIGHT_MODULE_STEER_MOTOR_ID);
 
-    // private final CANCoder m_frontLeftCANCoder = new CANCoder(Constants.FRONT_LEFT_MODULE_STEER_MOTOR_ID);
-    // private final CANCoder m_frontRightCANCoder = new CANCoder(Constants.FRONT_RIGHT_MODULE_STEER_MOTOR_ID);
-    // private final CANCoder m_backLeftCANCoder = new CANCoder(Constants.BACK_LEFT_MODULE_STEER_MOTOR_ID);
-    // private final CANCoder m_backRightCANCoder = new CANCoder(Constants.BACK_RIGHT_MODULE_STEER_MOTOR_ID);
+    private final CANCoder m_frontLeftCANCoder = new CANCoder(Constants.FRONT_LEFT_MODULE_STEER_MOTOR_ID);
+    private final CANCoder m_frontRightCANCoder = new CANCoder(Constants.FRONT_RIGHT_MODULE_STEER_MOTOR_ID);
+    private final CANCoder m_backLeftCANCoder = new CANCoder(Constants.BACK_LEFT_MODULE_STEER_MOTOR_ID);
+    private final CANCoder m_backRightCANCoder = new CANCoder(Constants.BACK_RIGHT_MODULE_STEER_MOTOR_ID);
 
     private ChassisSpeeds m_chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
@@ -121,6 +137,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
     private static final boolean INITIAL_FIELD_ORIENTED_SETTING = true;
 
     private NetworkTableEntry m_isFieldOrientedTableEntry;
+
+    private PathPlannerTrajectory examplePath = PathPlanner.loadPath("Spinning Circle", new PathConstraints(3, 1.5));
+
+    private SwerveDriveOdometry m_odometry;
+
+    private boolean doingTeleOpAuto;
 
     public DrivetrainSubsystem() {
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
@@ -178,8 +200,18 @@ public class DrivetrainSubsystem extends SubsystemBase {
         configureDriveMotor(m_frontRightDriveMotor);
         configureDriveMotor(m_backLeftDriveMotor);
         configureDriveMotor(m_backRightDriveMotor);
+
+        // configureSteerSensor(m_frontLeftCANCoder);
+        // configureSteerSensor(m_frontRightCANCoder);
+        // configureSteerSensor(m_backLeftCANCoder);
+        // configureSteerSensor(m_backRightCANCoder);
+
+        doingTeleOpAuto = false;
                        
         zeroGyroscope();
+
+        m_odometry = new SwerveDriveOdometry(m_kinematics, Rotation2d.fromDegrees(0));
+        //m_odometry = new SwerveDriveOdometry(m_kinematics, new Rotation2d(-m_pigeon.getYaw()));
 
         // Add widgets to adjust controller input values and robot-v-field orientation
         m_forwardAdjustmentTableEntry = tab.add("Forward Adj", INITIAL_INPUT_ADJUSTMENT)
@@ -219,13 +251,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
     }
 
     // KAS - this fails every time and you can't configure the CANCoders via Pheonix Tuner, WTF?
-    // private void configureSteerSensor(CANCoder sensor) {
-    //     if (sensor.configGetSensorInitializationStrategy(1000).value == SensorInitializationStrategy.BootToZero.value) {
-    //         if (sensor.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition, 1000).value != ErrorCode.OK.value) {
-    //             System.out.println("ERROR: Couldn't set the initialization strategy");
-    //         }
-    //     }
-    // }
+    private void configureSteerSensor(CANCoder sensor) {
+        if (sensor.configGetSensorInitializationStrategy(1000).value == SensorInitializationStrategy.BootToZero.value) {
+            if (sensor.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition, 1000).value != ErrorCode.OK.value) {
+                System.out.println("ERROR: Couldn't set the initialization strategy");
+            }
+        }
+    }
 
     /**
      * Sets the gyroscope angle to zero. This can be used to set the direction the
@@ -299,9 +331,15 @@ public class DrivetrainSubsystem extends SubsystemBase {
         drive(chassisSpeeds);
     }
 
-    @Override
-    public void periodic() {
-        SwerveModuleState[] states = m_kinematics.toSwerveModuleStates(m_chassisSpeeds);
+    public PathPlannerTrajectory getExamplePath() {
+        return examplePath;
+    }
+
+    private Pose2d getPose() {
+        return m_odometry.getPoseMeters();
+    }
+
+    private void setModuleStates(SwerveModuleState[] states) {
         SwerveDriveKinematics.desaturateWheelSpeeds(states, MAX_VELOCITY_METERS_PER_SECOND);
 
         m_frontLeftModule.set(states[0].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE,
@@ -312,5 +350,54 @@ public class DrivetrainSubsystem extends SubsystemBase {
                 states[2].angle.getRadians());
         m_backRightModule.set(states[3].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE,
                 states[3].angle.getRadians());
+    }
+
+    private double getYaw() {
+        return Math.IEEEremainder(m_pigeon.getYaw(), 360.0d);
+    }
+
+
+        // Assuming this method is part of a drivetrain subsystem that provides the necessary methods
+    public Command followTrajectoryCommand(PathPlannerTrajectory traj, boolean isFirstPath) {
+        return new SequentialCommandGroup(
+            new InstantCommand(() -> {
+                // Reset odometry for the first path you run during auto
+                if(isFirstPath){
+                    //this.resetOdometry(traj.getInitialHolonomicPose());
+                    //TODO do we need to reset encoders? 
+                    m_odometry.resetPosition(traj.getInitialHolonomicPose(), Rotation2d.fromDegrees(getYaw()));
+                    System.out.println("---Initial Pose rotation: " + traj.getInitialHolonomicPose().getRotation().toString());
+                    System.out.println("---raw Yaw " + m_pigeon.getYaw());
+                    System.out.println("---get Yaw " + getYaw());
+                    System.out.println("---Yaw param: " + Rotation2d.fromDegrees(getYaw()));
+
+                    //m_odometry.resetPosition(traj.getInitialHolonomicPose(),  Rotation2d.fromDegrees(0));
+                }
+            }),
+            new PPSwerveControllerCommand(
+                traj, 
+                this::getPose, // Pose supplier
+                this.m_kinematics, // SwerveDriveKinematics
+                new PIDController(0, 0, 0), // X controller. Tune these values for your robot. Leaving them 0 will only use feedforwards.
+                new PIDController(0, 0, 0), // Y controller (usually the same values as X controller)
+                new PIDController(0, 0, 0), // Rotation controller. Tune these values for your robot. Leaving them 0 will only use feedforwards.
+                this::setModuleStates, // Module states consumer
+                this // Requires this drive subsystem
+            )
+        );
+    }
+
+    public void setDoingTeleOpAuto(boolean doingTeleOpAuto) {
+        this.doingTeleOpAuto = doingTeleOpAuto;
+    }
+
+    @Override
+    public void periodic() {
+        SwerveModuleState[] states = m_kinematics.toSwerveModuleStates(m_chassisSpeeds);
+        m_odometry.update(Rotation2d.fromDegrees(getYaw()), states);
+
+        if(!doingTeleOpAuto) {
+            setModuleStates(states);
+        }
     }
 }

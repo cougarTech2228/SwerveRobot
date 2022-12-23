@@ -71,6 +71,16 @@ public class RobotContainer {
 
         new Button(m_controller::getBButton)
                 .whenPressed(m_drivetrainSubsystem::stopMotors, m_drivetrainSubsystem);
+
+        new Button(m_controller::getAButton)
+            .whenPressed(() -> {
+                m_drivetrainSubsystem.setDoingTeleOpAuto(true);
+                m_drivetrainSubsystem.setMotorsToBrake();
+                m_drivetrainSubsystem.followTrajectoryCommand(m_drivetrainSubsystem.getExamplePath(), true)
+                .andThen(() -> m_drivetrainSubsystem.setDoingTeleOpAuto(false), m_drivetrainSubsystem).schedule();
+            },
+            m_drivetrainSubsystem
+        );
     }
 
     /**
