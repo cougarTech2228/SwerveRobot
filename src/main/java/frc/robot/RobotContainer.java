@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.PathConstraints;
+import com.pathplanner.lib.PathPlanner;
+
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -11,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Button;
 import frc.robot.commands.DefaultDriveCommand;
 import frc.robot.commands.DockWithAprilTagPIDCommand;
+import frc.robot.commands.FollowTrajectoryCommand;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.AprilTagSubsystem;
 
@@ -76,7 +80,7 @@ public class RobotContainer {
             .whenPressed(() -> {
                 m_drivetrainSubsystem.setDoingTeleOpAuto(true);
                 m_drivetrainSubsystem.setMotorsToBrake();
-                m_drivetrainSubsystem.followTrajectoryCommand(m_drivetrainSubsystem.getExamplePath(), true)
+                new FollowTrajectoryCommand(m_drivetrainSubsystem,  PathPlanner.loadPath("Path2", new PathConstraints(3, 1.5)), true)
                 .andThen(() -> m_drivetrainSubsystem.setDoingTeleOpAuto(false), m_drivetrainSubsystem).schedule();
             },
             m_drivetrainSubsystem
