@@ -16,6 +16,7 @@ import frc.robot.commands.DefaultDriveCommand;
 import frc.robot.commands.DockWithAprilTagPIDCommand;
 import frc.robot.commands.FollowTrajectoryCommand;
 import frc.robot.subsystems.DrivetrainSubsystem;
+import frc.robot.subsystems.LEDStripSubsystem;
 import frc.robot.subsystems.AprilTagSubsystem;
 
 /**
@@ -29,11 +30,13 @@ import frc.robot.subsystems.AprilTagSubsystem;
  */
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
-    private final DrivetrainSubsystem m_drivetrainSubsystem = new DrivetrainSubsystem();
+    private final static DrivetrainSubsystem m_drivetrainSubsystem = new DrivetrainSubsystem();
 
     private final XboxController m_controller = new XboxController(0);
 
-    private final AprilTagSubsystem m_aprilTagSubsystem = new AprilTagSubsystem();
+    private final static AprilTagSubsystem m_aprilTagSubsystem = new AprilTagSubsystem();
+
+    private final static LEDStripSubsystem m_ledStripSubsystem = new LEDStripSubsystem();
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -119,7 +122,15 @@ public class RobotContainer {
         return value;
     }
 
-    public DrivetrainSubsystem getDrivetrainSubsytem() {
+    public static DrivetrainSubsystem getDrivetrainSubsystem() {
         return m_drivetrainSubsystem;
+    }
+
+    public static AprilTagSubsystem getAprilTagSubsystem() {
+        return m_aprilTagSubsystem;
+    }
+
+    public static LEDStripSubsystem getLEDStripSubsystem() {
+        return m_ledStripSubsystem;
     }
 }

@@ -4,11 +4,13 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.server.PathPlannerServer;
-
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.utils.CT_LEDStrip.ColorPattern;
+import frc.robot.utils.CT_LEDStrip.GlowColor;
+import frc.robot.utils.CT_LEDStrip.Speed;
+import edu.wpi.first.wpilibj.util.Color;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -67,7 +69,8 @@ public class Robot extends TimedRobot {
     public void disabledInit() {
         // Note that this may cause Falcon 500 errors at startup, shouldn't
         // be anything to worry about.
-        m_robotContainer.getDrivetrainSubsytem().setMotorsToCoast();
+        RobotContainer.getDrivetrainSubsystem().setMotorsToCoast();
+        RobotContainer.getLEDStripSubsystem().resetStrip();
     }
 
     @Override
@@ -80,8 +83,8 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousInit() {
-        m_robotContainer.getDrivetrainSubsytem().setMotorsToBrake();
-        m_robotContainer.getDrivetrainSubsytem().primeDrivetrain();
+        RobotContainer.getDrivetrainSubsystem().setMotorsToBrake();
+        RobotContainer.getDrivetrainSubsystem().primeDrivetrain();
         // m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
         // schedule the autonomous command (example)
@@ -97,8 +100,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
-        m_robotContainer.getDrivetrainSubsytem().setMotorsToBrake();
-        m_robotContainer.getDrivetrainSubsytem().primeDrivetrain();
+        RobotContainer.getDrivetrainSubsystem().setMotorsToBrake();
+        RobotContainer.getDrivetrainSubsystem().primeDrivetrain();
         // This makes sure that the autonomous stops running when
         // teleop starts running. If you want the autonomous to
         // continue until interrupted by another command, remove
